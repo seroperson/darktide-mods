@@ -14,10 +14,10 @@ return {
 		ru = "Фильтр по базовому уровню",
 		["zh-cn"] = "根据物品基础评级过滤",
 	},
-	ignore_filtering_when_unlearned = {
-		en = "Ignore filtering when item has unlearned perk",
-		ru = "Игнорировать фильтры при неизученном таланте",
-		["zh-cn"] = "物品有尚未提取的祝福则不过滤",
+	show_only_ideal = {
+		en = "Show only ideal",
+		ru = "Показывать только идеальные",
+		["zh-cn"] = "只显示完美的",
 	},
 	group_filter_by_stats = {
 		en = "Filter by stats",

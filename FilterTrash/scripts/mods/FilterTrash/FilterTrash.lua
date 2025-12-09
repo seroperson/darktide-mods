@@ -1,61 +1,24 @@
 local mod = get_mod("FilterTrash")
 
+mod._info = {
+    title = "FilterTrash",
+    author = "seroperson",
+    date = "2025/12/09",
+    version = "0.2.0",
+}
+mod:info("Version " .. mod._info.version)
+
 local Promise = require("scripts/foundation/utilities/promise")
 local WeaponTemplates = require("scripts/settings/equipment/weapon_templates/weapon_templates")
-local MasterItems = require("scripts/backend/master_items")
 local CreditsVendorView = require("scripts/ui/views/credits_vendor_view/credits_vendor_view")
+local WeaponStats = require("scripts/utilities/weapon_stats")
+local MasterItems = require("scripts/backend/master_items")
+local Items = require("scripts/utilities/items")
 
-mod.on_enabled = function()
-	if Managers.data_service.crafting._trait_sticker_book_cache then
-		Managers.data_service.crafting:warm_trait_sticker_book_cache()
-	end
-end
-
--- credits to ItemSorting mod
-local function has_unearned_trait(item)
-	if item.item_type ~= "WEAPON_MELEE" and item.item_type ~= "WEAPON_RANGED" then
-		return false
-	end
-	if not item.traits then
-		return false
-	end
-	local cache = Managers.data_service.crafting._trait_sticker_book_cache
-	if not cache then
-		return false
-	end
-	local category = cache:cached_data_by_key(item.trait_category)
-	if not category then
-		return false
-	end
-
-	for _, trait in ipairs(item.traits) do
-		if trait.rarity then
-			local book = category[trait.id]
-			if book then
-				if book[trait.rarity] ~= "seen" then
-					local i = trait.rarity + 1
-					local low = false
-					while book[i] and book[i] ~= "invalid" do
-						if book[i] == "seen" then
-							low = true
-							break
-						end
-						i = i + 1
-					end
-					if not low then
-						return true
-					end
-				end
-			end
-		end
-	end
-	return false
-end
-
-local function get_store_filtered(self)
+local function filter_items(data)
+	local show_only_ideal = mod:get("show_only_ideal")
 	local item_level_base_filter_is_enabled = mod:get("group_filter_by_base_item_level")
 	local item_level_base_filter = mod:get("item_level_base")
-	local ignore_filtering_when_unlearned = mod:get("ignore_filtering_when_unlearned")
 
 	local filtering_by_stat = {}
 	for _, weapon_template in pairs(WeaponTemplates) do
@@ -64,93 +27,71 @@ local function get_store_filtered(self)
 				if stat_object and stat_object.display_name then
 					-- if filtering by this stat is enabled
 					if mod:get(string.format("group_filter_by_stat_%s", stat_object.display_name)) then
-						filtering_by_stat[stat_name] = mod:get(stat_object.display_name) / 100.0
+						filtering_by_stat[stat_name] = mod:get(stat_object.display_name)
 					end
 				end
 			end
 		end
 	end
 
-	local store_service = Managers.data_service.store
-	local store_promise = nil
-	local optional_store_service = self._optional_store_service
+	data.offers = table.compact_array(table.filter(data.offers, function(offer)
+		if offer.description.type == "weapon" then
+			local result = true
+			if item_level_base_filter_is_enabled then
+				result = offer.description.overrides.baseItemLevel >= item_level_base_filter
+			end
 
-	if optional_store_service and store_service[optional_store_service] then
-		store_promise = store_service[optional_store_service](store_service)
-	else
-		store_promise = store_service:get_credits_store()
-	end
+			local base_stats = offer.description.overrides.base_stats
+			local modified_desciption = table.clone(offer.description)
+			modified_desciption.gear_id = offer.description.gearId
+			local item = MasterItems.get_store_item_instance(modified_desciption)
 
-	if not store_promise then
-		return
-	end
-
-	return store_promise:next(function(data)
-		local local_player_id = 1
-		local player = Managers.player:local_player(local_player_id)
-		local character_id = player:character_id()
-
-		-- the main filtering code
-		data.offers = table.compact_array(table.filter(data.offers, function(offer)
-			if offer.description.type == "weapon" then
-				if ignore_filtering_when_unlearned then
-					local sku = offer.sku
-					local category = sku.category
-
-					if category == "item_instance" then
-						if has_unearned_trait(MasterItems.get_store_item_instance(offer.description)) then
-							return true
-						end
-					end
-				end
-
-				local result = nil
-				if item_level_base_filter_is_enabled then
-					result = offer.description.overrides.baseItemLevel >= item_level_base_filter
-				end
-
-				if offer.description.overrides.base_stats then
-					for i = 1, #offer.description.overrides.base_stats do
-						local key = offer.description.overrides.base_stats[i].name
-						local value = offer.description.overrides.base_stats[i].value
-						if filtering_by_stat[key] then
-							if result == nil then
-								result = value >= filtering_by_stat[key]
-							else
-								result = result and value >= filtering_by_stat[key]
-							end
-						end
-					end
-				end
-
+			if not item then
 				return result
-			else
-				return true
 			end
-		end))
 
-		return Managers.data_service.gear:fetch_inventory(character_id):next(function(items)
-			local offers = data.offers
+			local weapon_stats = WeaponStats:new(item)
+			local comparing_stats = weapon_stats:get_comparing_stats()
+			local added_stats = Items.preview_stats_change(item, 0, comparing_stats)
+			local max_stats = Items.preview_stats_change(item, Items.max_expertise_level(), comparing_stats)
 
-			for i = 1, #offers do
-				local offer = offers[i]
-				local sku = offer.sku
-				local category = sku.category
+			if not max_stats then
+				return result
+			end
 
-				if category == "item_instance" and offer.state == "active" then
-					local item = offer.description
+			if show_only_ideal then
+				local ideal_bad_stat = table.filter(max_stats, function(max_stat)
+					return max_stat.value == 60
+				end)
+				
+				result = result and table.size(ideal_bad_stat) == 1
+			end
 
-					if self:_does_item_exist_in_list(items, item) then
-						offer.state = "owned"
+			for i = 1, #comparing_stats do
+				local stat_data = comparing_stats[i]
+				local key = stat_data.name
+				local value = max_stats[stat_data.display_name].value
+				if filtering_by_stat[key] then
+					local this_filtering = value >= filtering_by_stat[key]
+					if result == nil then
+						result = this_filtering
+					else
+						result = result and this_filtering
 					end
 				end
 			end
 
-			return Promise.resolved(data)
-		end)
-	end)
+			return result
+		else
+			return true
+		end
+	end))
+
+	return Promise.resolved(data)
 end
 
-mod:hook(CreditsVendorView, "_get_store", function(func, self)
-	return get_store_filtered(self)
+mod:hook_require("scripts/ui/views/credits_vendor_view/credits_vendor_view", function(instance)
+	mod:hook(instance, "_get_store", function(f, self)
+		return f(self):next(filter_items)
+	end)
 end)
