@@ -3,6 +3,7 @@
 Hello and welcome to my Darktide mods repository.
 
 - [FilterTrash](#filtertrash)
+- [ImprovedPenanceTracking](#improvedpenancetracking)
 
 ## FilterTrash
 
@@ -17,3 +18,13 @@ supports:
 Relics are always visible because it takes not so much time to check them 
 manually.
 
+## ImprovedPenanceTracking
+
+Minor QoL improvements for penance tracking system:
+
+- Increases max penances tracking limit up to 20.
+- Allows you to hide other classes penances in TAB overlay if not playing this class right 
+  now (togglable in settings, default: false). 
+  For example, it hides Zealot's penances when playing Orgyn.
+
+Known issues: TAB overlay is missing scrollbar if too much penances are tracked.
