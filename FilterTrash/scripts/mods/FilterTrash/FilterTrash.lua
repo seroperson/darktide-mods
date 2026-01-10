@@ -8,6 +8,16 @@ mod._info = {
 }
 mod:info("Version " .. mod._info.version)
 
+-- State variable to track if filtering is enabled
+mod.filtering_enabled = true
+
+-- Toggle function for hotkey
+function mod.toggle_filtering()
+    mod.filtering_enabled = not mod.filtering_enabled
+    local status = mod.filtering_enabled and "enabled" or "disabled"
+    mod:echo("Filtering " .. status)
+end
+
 local Promise = require("scripts/foundation/utilities/promise")
 local WeaponTemplates = require("scripts/settings/equipment/weapon_templates/weapon_templates")
 local CreditsVendorView = require("scripts/ui/views/credits_vendor_view/credits_vendor_view")
@@ -16,6 +26,11 @@ local MasterItems = require("scripts/backend/master_items")
 local Items = require("scripts/utilities/items")
 
 local function filter_items(key, data)
+    -- If filtering is disabled, return data without modification
+    if not mod.filtering_enabled then
+        return Promise.resolved(data)
+    end
+
     local show_only_ideal_60 = mod:get(string.format("%s_show_only_ideal_60", key))
     local show_only_ideal_76 = mod:get(string.format("%s_show_only_ideal_76", key))
     local gadget_item_level_filter_is_enabled = mod:get(string.format("%s_gadget_group_filter_by_item_level",

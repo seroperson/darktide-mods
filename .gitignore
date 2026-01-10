@@ -1,0 +1,6 @@
+# I've placed these folders here to navigate there easily
+Darktide-Source-Code/
+Darktide-Mod-Framework/
+
+# Don't track my settings
+.vscode/

@@ -105,6 +105,14 @@ return {
     is_togglable = true,
     options = {
         widgets = {
+            {
+                setting_id = "toggle_filtering_hotkey",
+                type = "keybind",
+                default_value = {},
+                keybind_trigger = "pressed",
+                keybind_type = "function_call",
+                function_name = "toggle_filtering"
+            },
             build_store_widgets("contracts"),
             build_store_widgets("brunt"),
             {

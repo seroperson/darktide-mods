@@ -9,6 +9,11 @@ return {
         ru = "Фильтрует оружие в магазине по заданным правилам.",
         ["zh-cn"] = "根据预先配置的规则屏蔽布伦特商店内的垃圾物品。",
     },
+    toggle_filtering_hotkey = {
+        en = "Toggle Filtering Hotkey",
+        ru = "Горячая клавиша переключения фильтрации",
+        ["zh-cn"] = "切换过滤热键",
+    },
     gadget_group_filter_by_item_level = {
         en = "Filter Curios by level",
         ru = "Фильтр Реликов по базовому уровню",
