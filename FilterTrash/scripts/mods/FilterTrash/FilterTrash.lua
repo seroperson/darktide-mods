@@ -4,7 +4,7 @@ mod._info = {
     title = "FilterTrash",
     author = "seroperson",
     date = "2025/12/09",
-    version = "0.2.0",
+    version = "0.3.0",
 }
 mod:info("Version " .. mod._info.version)
 
@@ -24,6 +24,7 @@ local CreditsVendorView = require("scripts/ui/views/credits_vendor_view/credits_
 local WeaponStats = require("scripts/utilities/weapon_stats")
 local MasterItems = require("scripts/backend/master_items")
 local Items = require("scripts/utilities/items")
+local StoreNames = require("scripts/settings/backend/store_names")
 
 local function filter_items(key, data)
     -- If filtering is disabled, return data without modification
@@ -135,4 +136,174 @@ mod:hook_require("scripts/ui/views/marks_vendor_view/marks_vendor_view", functio
     mod:hook(instance, "_get_store", function(f, self)
         return f(self):next(filter_items_contracts)
     end)
+end)
+
+-- Function to get all owned character profiles
+local function get_all_character_profiles()
+    return Managers.data_service.profiles:fetch_all_profiles():next(function(result)
+        return Promise.resolved(result.profiles or {})
+    end)
+end
+
+-- Function to fetch stores for all characters and merge them
+local function get_all_characters_store()
+    return get_all_character_profiles():next(function(profiles)
+        if #profiles == 0 then
+            return Promise.rejected("No characters found")
+        end
+
+        -- Create promises for each character's store
+        local store_promises = {}
+        for i = 1, #profiles do
+            local profile = profiles[i]
+            local character_id = profile.character_id
+            local archetype = profile.archetype
+            local archetype_name = archetype.name
+
+            -- Get the store method name for this archetype
+            local store_method_name = StoreNames.by_archetype.credit[archetype_name]
+
+            if store_method_name then
+                local store_backend = Managers.backend.interfaces.store
+
+                -- Call the backend store method directly
+                if store_backend[store_method_name] then
+                    local store_promise = store_backend[store_method_name](store_backend, nil, character_id)
+                    table.insert(store_promises, store_promise)
+                end
+            end
+        end
+
+        -- Wait for all stores to be fetched
+        return Promise.all(table.unpack(store_promises)):next(function(stores)
+            -- Merge all offers from all stores
+            local merged_offers = {}
+            local seen_offer_ids = {}
+
+            for i = 1, #stores do
+                local store = stores[i]
+                local offers = store.data.personal
+                if store and offers then
+                    for j = 1, #offers do
+                        local offer = offers[j]
+                        local offer_id = offer.offerId
+
+                        -- Only add if we haven't seen this offer before
+                        if not seen_offer_ids[offer_id] then
+                            table.insert(merged_offers, offer)
+                            seen_offer_ids[offer_id] = true
+                        end
+                    end
+                end
+            end
+
+            -- Return a merged store structure
+            local merged_store = {
+                offers = merged_offers,
+                currentRotation = stores[1] and stores[1].currentRotation or {},
+                nextRotation = stores[1] and stores[1].nextRotation or {}
+            }
+
+            return Promise.resolved(merged_store)
+        end)
+    end)
+end
+
+-- Hook the credits vendor background view to add our custom button
+mod:hook_require("scripts/ui/views/credits_vendor_background_view/credits_vendor_background_view_definitions",
+    function(definitions)
+        -- Add a new button option for "All Characters"
+        local button_options = definitions.button_options_definitions
+
+        while #button_options > 2 do
+            table.remove(button_options, 2)
+        end
+
+        -- Insert the new button after the first "Buy" button
+        local localized_button_name = mod:localize("all_characters_button")
+        local localized_title = mod:localize("all_characters_title")
+
+        table.insert(button_options, 2, {
+            unlocalized_name = localized_button_name,
+            localized = true,
+            callback = function(self)
+                local UISettings = require("scripts/settings/ui/ui_settings")
+
+                local tab_bar_params = {
+                    hide_tabs = true,
+                    layer = 10,
+                    tabs_params = {
+                        {
+                            blur_background = false,
+                            unlocalized_name = localized_title,
+                            view = "credits_vendor_view",
+                            context = {
+                                use_item_categories = true,
+                                optional_store_service = "get_all_characters_store_custom",
+                            },
+                            input_legend_buttons = {
+                                {
+                                    alignment = "right_alignment",
+                                    display_name = "loc_weapon_inventory_inspect_button",
+                                    input_action = "hotkey_item_inspect",
+                                    on_pressed_callback = "cb_on_inspect_pressed",
+                                    visibility_function = function(parent)
+                                        local active_view = parent._active_view
+
+                                        if active_view then
+                                            local view_instance = Managers.ui:view_instance(active_view)
+                                            local previewed_item = view_instance and view_instance._previewed_item
+
+                                            if previewed_item then
+                                                local item_type = previewed_item.item_type
+                                                local ITEM_TYPES = UISettings.ITEM_TYPES
+
+                                                if item_type == ITEM_TYPES.WEAPON_MELEE or item_type == ITEM_TYPES.WEAPON_RANGED or item_type == ITEM_TYPES.WEAPON_SKIN or item_type == ITEM_TYPES.END_OF_ROUND or item_type == ITEM_TYPES.GEAR_EXTRA_COSMETIC or item_type == ITEM_TYPES.GEAR_HEAD or item_type == ITEM_TYPES.GEAR_LOWERBODY or item_type == ITEM_TYPES.GEAR_UPPERBODY or item_type == ITEM_TYPES.COMPANION_GEAR_FULL or item_type == ITEM_TYPES.EMOTE then
+                                                    return true
+                                                end
+                                            end
+                                        end
+
+                                        return false
+                                    end,
+                                },
+                                {
+                                    alignment = "right_alignment",
+                                    display_name = "loc_item_toggle_equipped_compare",
+                                    input_action = "hotkey_item_compare",
+                                    on_pressed_callback = "cb_on_toggle_item_compare",
+                                    visibility_function = function(parent)
+                                        local active_view = parent._active_view
+
+                                        if active_view then
+                                            local view_instance = Managers.ui:view_instance(active_view)
+
+                                            return view_instance and view_instance._previewed_item ~= nil
+                                        end
+
+                                        return false
+                                    end,
+                                },
+                            },
+                        },
+                    },
+                }
+
+                self:_setup_tab_bar(tab_bar_params, {
+                    fetch_store_items_on_enter = true,
+                    hide_price = true,
+                })
+            end,
+        })
+
+        return definitions
+    end)
+
+-- Hook the store service to add our custom method
+mod:hook_require("scripts/managers/data_service/services/store_service", function(StoreService)
+    StoreService.get_all_characters_store_custom = function(self, ignore_event_trigger)
+        return get_all_characters_store()
+    end
+
+    return StoreService
 end)
