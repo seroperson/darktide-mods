@@ -9,16 +9,6 @@ return {
         ru = "Фильтрует оружие в магазине по заданным правилам.",
         ["zh-cn"] = "根据预先配置的规则屏蔽布伦特商店内的垃圾物品。",
     },
-    all_characters_button = {
-        en = "Browse Items (All Characters)",
-        ru = "Просмотр предметов (Все персонажи)",
-        ["zh-cn"] = "浏览物品（所有角色）",
-    },
-    all_characters_title = {
-        en = "Armoury - All Characters",
-        ru = "Арсенал - Все персонажи",
-        ["zh-cn"] = "军械库 - 所有角色",
-    },
     toggle_filtering_hotkey = {
         en = "Toggle Filtering Hotkey",
         ru = "Горячая клавиша переключения фильтрации",
@@ -67,4 +57,3 @@ return {
         ["zh-cn"] = "值（%%）",
     }
 }
-
