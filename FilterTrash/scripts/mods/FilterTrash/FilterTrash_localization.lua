@@ -36,13 +36,17 @@ return {
         en = "Filtering in Armoury",
         ru = "Фильтрация в Арсенале",
     },
-    show_only_ideal_60 = {
-        en = "Show only ideal (one stat 60%%)",
-        ru = "Показывать только идеальные (один стат 60%%)",
+    show_ideal_60 = {
+        en = "Show ideal (one stat 60%%)",
+        ru = "Показывать идеальные (один стат 60%%)",
     },
-    show_only_ideal_76 = {
-        en = "Show only ideal (all stats 76%%)",
-        ru = "Показывать только идеальные (все статы 76%%)",
+    show_ideal_percent = {
+        en = "Show items which have all stats more than %%",
+        ru = "Показывать предметы, у которых все статы больше чем %%",
+    },
+    ideal_percent = {
+        en = "Minimum percent for all stats",
+        ru = "Минимальный процент для всех статов",
     },
     group_filter_by_weapon_stats = {
         en = "Filter by weapon stats",
@@ -63,3 +67,4 @@ return {
         ["zh-cn"] = "值（%%）",
     }
 }
+

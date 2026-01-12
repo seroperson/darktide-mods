@@ -84,16 +84,26 @@ local function build_store_widgets(key)
                 },
             },
             {
-                setting_id = string.format("%s_show_only_ideal_60", key),
-                title = "show_only_ideal_60",
+                setting_id = string.format("%s_show_ideal_60", key),
+                title = "show_ideal_60",
                 type = "checkbox",
                 default_value = false,
             },
             {
-                setting_id = string.format("%s_show_only_ideal_76", key),
-                title = "show_only_ideal_76",
+                setting_id = string.format("%s_show_ideal_percent", key),
+                title = "show_ideal_percent",
                 type = "checkbox",
                 default_value = false,
+                sub_widgets = {
+                    {
+                        setting_id = string.format("%s_ideal_percent", key),
+                        title = "ideal_percent",
+                        type = "numeric",
+                        default_value = 75,
+                        range = { 70, 76 },
+                        decimals_number = 0,
+                    },
+                },
             }
         },
     }
