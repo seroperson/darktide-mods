@@ -90,8 +90,7 @@ local function get_all_characters_store()
             -- Return a merged store structure
             local merged_store = {
                 offers = merged_offers,
-                currentRotation = stores[1] and stores[1].currentRotation or {},
-                nextRotation = stores[1] and stores[1].nextRotation or {},
+                current_rotation_end = stores[1] and stores[1].data.currentRotationEnd,
                 offer_to_profile = offer_to_profile
             }
 
