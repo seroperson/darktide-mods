@@ -54,6 +54,11 @@ local function get_all_characters_store()
                 -- Call the backend store method directly
                 if store_backend[store_method_name] then
                     local store_promise = store_backend[store_method_name](store_backend, nil, character_id)
+                    -- Wrap with catch to handle failures gracefully
+                    store_promise = store_promise:catch(function(error)
+                        mod:warning("Failed to fetch credits store for character %s: %s", character_id, tostring(error))
+                        return nil
+                    end)
                     table.insert(store_promises, store_promise)
                 end
             end
@@ -68,10 +73,10 @@ local function get_all_characters_store()
 
             for i = 1, #stores do
                 local store = stores[i]
-                local offers = store.data.personal
                 local profile = profile_lookup[i]
 
-                if store and offers then
+                if store and store.data then
+                    local offers = store.data.personal
                     for j = 1, #offers do
                         local offer = offers[j]
                         local offer_id = offer.offerId
@@ -127,6 +132,11 @@ local function get_all_characters_marks_store()
                 -- Call the backend store method directly
                 if store_backend[store_method_name] then
                     local store_promise = store_backend[store_method_name](store_backend, nil, character_id)
+                    -- Wrap with catch to handle failures gracefully
+                    store_promise = store_promise:catch(function(error)
+                        mod:warning("Failed to fetch marks store for character %s: %s", character_id, tostring(error))
+                        return nil
+                    end)
                     table.insert(store_promises, store_promise)
                 end
             end
@@ -141,10 +151,10 @@ local function get_all_characters_marks_store()
 
             for i = 1, #stores do
                 local store = stores[i]
-                local offers = store.data.personal
                 local profile = profile_lookup[i]
 
-                if store and offers then
+                if store and store.data then
+                    local offers = store.data.personal
                     for j = 1, #offers do
                         local offer = offers[j]
                         local offer_id = offer.offerId
@@ -163,8 +173,7 @@ local function get_all_characters_marks_store()
             -- Return a merged store structure
             local merged_store = {
                 offers = merged_offers,
-                currentRotation = stores[1] and stores[1].currentRotation or {},
-                nextRotation = stores[1] and stores[1].nextRotation or {},
+                current_rotation_end = stores[1] and stores[1].data.currentRotationEnd,
                 offer_to_profile = offer_to_profile
             }
 
@@ -647,4 +656,3 @@ mod:hook(MarksVendorView, "destroy", function(func, self)
 
     return func(self)
 end)
-
