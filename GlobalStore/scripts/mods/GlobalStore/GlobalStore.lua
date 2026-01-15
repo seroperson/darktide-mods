@@ -56,7 +56,8 @@ local function get_all_characters_store()
                     local store_promise = store_backend[store_method_name](store_backend, nil, character_id)
                     -- Wrap with catch to handle failures gracefully
                     store_promise = store_promise:catch(function(error)
-                        mod:warning("Failed to fetch credits store for character %s: %s", character_id, tostring(error))
+                        mod:notify(string.format("Failed to fetch credits store for character %s: %s", profile.name,
+                            tostring(error)))
                         return nil
                     end)
                     table.insert(store_promises, store_promise)
@@ -134,7 +135,8 @@ local function get_all_characters_marks_store()
                     local store_promise = store_backend[store_method_name](store_backend, nil, character_id)
                     -- Wrap with catch to handle failures gracefully
                     store_promise = store_promise:catch(function(error)
-                        mod:warning("Failed to fetch marks store for character %s: %s", character_id, tostring(error))
+                        mod:notify(string.format("Failed to fetch marks store for character %s: %s", profile.name,
+                            tostring(error)))
                         return nil
                     end)
                     table.insert(store_promises, store_promise)
@@ -392,6 +394,28 @@ mod:hook(CreditsVendorView, "present_grid_layout",
         }
         table.insert(pass_template, portrait_widget_def)
 
+        -- Character info widget definition (class symbol + character name in one row)
+        local character_info_widget_def = {
+            pass_type = "text",
+            style_id = "character_info_text",
+            value = "",
+            value_id = "character_info_text",
+            style = {
+                vertical_alignment = "bottom",
+                horizontal_alignment = "left",
+                font_type = "proxima_nova_bold",
+                font_size = 20,
+                text_color = { 255, 220, 220, 220 },
+                offset = {
+                    52,
+                    -12,
+                    11
+                },
+                size = { 400, 20 },
+            }
+        }
+        table.insert(pass_template, character_info_widget_def)
+
         local grid_display_name = self._grid_display_name
         local left_click_callback = callback(self, "cb_on_grid_entry_left_pressed")
         local left_double_click_callback = callback(self, "cb_on_grid_entry_left_double_click")
@@ -418,6 +442,15 @@ mod:hook(CreditsVendorView, "present_grid_layout",
                         }
                         widget.content.profile = profile
                         update_portrait(self, widget, profile)
+
+                        -- Set character info (class symbol + name in one row)
+                        if profile then
+                            local archetype = profile.archetype
+                            local archetype_name = archetype and archetype.name
+                            local string_symbol = archetype_name and UISettings.archetype_font_icon[archetype_name] or ""
+                            local character_name = profile.name or ""
+                            widget.content.character_info_text = string.format("%s %s", string_symbol, character_name)
+                        end
                     end
                 end
             end
@@ -582,6 +615,28 @@ mod:hook(MarksVendorView, "present_grid_layout",
         }
         table.insert(pass_template, portrait_widget_def)
 
+        -- Character info widget definition (class symbol + character name in one row)
+        local character_info_widget_def = {
+            pass_type = "text",
+            style_id = "character_info_text",
+            value = "",
+            value_id = "character_info_text",
+            style = {
+                vertical_alignment = "bottom",
+                horizontal_alignment = "left",
+                font_type = "proxima_nova_bold",
+                font_size = 20,
+                text_color = { 255, 220, 220, 220 },
+                offset = {
+                    52,
+                    -12,
+                    11
+                },
+                size = { 400, 20 },
+            }
+        }
+        table.insert(pass_template, character_info_widget_def)
+
         local grid_display_name = self._grid_display_name
         local left_click_callback = callback(self, "cb_on_grid_entry_left_pressed")
         local left_double_click_callback = callback(self, "cb_on_grid_entry_left_double_click")
@@ -608,6 +663,15 @@ mod:hook(MarksVendorView, "present_grid_layout",
                         }
                         widget.content.profile = profile
                         update_portrait(self, widget, profile)
+
+                        -- Set character info (class symbol + name in one row)
+                        if profile then
+                            local archetype = profile.archetype
+                            local archetype_name = archetype and archetype.name
+                            local string_symbol = archetype_name and UISettings.archetype_font_icon[archetype_name] or ""
+                            local character_name = profile.name or ""
+                            widget.content.character_info_text = string.format("%s %s", string_symbol, character_name)
+                        end
                     end
                 end
             end
@@ -656,3 +720,4 @@ mod:hook(MarksVendorView, "destroy", function(func, self)
 
     return func(self)
 end)
+
