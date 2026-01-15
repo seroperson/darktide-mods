@@ -3,8 +3,8 @@ local mod = get_mod("GlobalStore")
 mod._info = {
     title = "GlobalStore",
     author = "seroperson",
-    date = "2026/01/12",
-    version = "0.1.0",
+    date = "2026/01/16",
+    version = "0.2.0",
 }
 mod:info("GlobalStore Version " .. mod._info.version)
 

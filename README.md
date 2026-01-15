@@ -3,6 +3,7 @@
 Hello and welcome to my Darktide mods repository.
 
 - [FilterTrash](#filtertrash)
+- [GlobalStore](#globalstore)
 - [ImprovedPenanceTracking](#improvedpenancetracking)
 
 ## FilterTrash
