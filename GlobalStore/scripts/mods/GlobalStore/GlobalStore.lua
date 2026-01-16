@@ -4,7 +4,7 @@ mod._info = {
     title = "GlobalStore",
     author = "seroperson",
     date = "2026/01/16",
-    version = "0.2.0",
+    version = "0.3.0",
 }
 mod:info("GlobalStore Version " .. mod._info.version)
 
@@ -15,6 +15,9 @@ local UISettings = require("scripts/settings/ui/ui_settings")
 local StoreService = require("scripts/managers/data_service/services/store_service")
 local CreditsVendorView = require("scripts/ui/views/credits_vendor_view/credits_vendor_view")
 local MarksVendorView = require("scripts/ui/views/marks_vendor_view/marks_vendor_view")
+
+-- Fixing undefined unpack
+table.unpack = table.unpack or unpack
 
 -- Store character profile data for items
 mod.character_avatar_data = {}
@@ -720,4 +723,3 @@ mod:hook(MarksVendorView, "destroy", function(func, self)
 
     return func(self)
 end)
-
