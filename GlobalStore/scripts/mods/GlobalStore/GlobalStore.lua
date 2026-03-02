@@ -1,13 +1,5 @@
 local mod = get_mod("GlobalStore")
 
-mod._info = {
-    title = "GlobalStore",
-    author = "seroperson",
-    date = "2026/01/16",
-    version = "0.3.0",
-}
-mod:info("GlobalStore Version " .. mod._info.version)
-
 local Promise = require("scripts/foundation/utilities/promise")
 local StoreNames = require("scripts/settings/backend/store_names")
 local UIWidget = require("scripts/managers/ui/ui_widget")

@@ -9,4 +9,8 @@ return {
         })
     end,
     packages = {},
+    load_before = {
+        "FilterTrash",
+    },
+    version = "0.4.0",
 }

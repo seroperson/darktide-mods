@@ -1,13 +1,5 @@
 local mod = get_mod("FilterTrash")
 
-mod._info = {
-    title = "FilterTrash",
-    author = "seroperson",
-    date = "2026/01/12",
-    version = "0.3.0",
-}
-mod:info("FilterTrash Version " .. mod._info.version)
-
 -- State variable to track if filtering is enabled
 mod.filtering_enabled = true
 

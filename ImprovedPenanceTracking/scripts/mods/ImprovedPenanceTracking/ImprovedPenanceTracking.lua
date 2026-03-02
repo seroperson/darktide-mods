@@ -2,14 +2,6 @@ local mod = get_mod("ImprovedPenanceTracking")
 
 local HudElementTacticalOverlay = require("scripts/ui/hud/elements/tactical_overlay/hud_element_tactical_overlay")
 
-mod._info = {
-    title = "ImprovedPenanceTracking",
-    author = "seroperson",
-    date = "2025/12/11",
-    version = "0.1.0",
-}
-mod:info("Version " .. mod._info.version)
-
 local need_redraw = false
 
 local function get_local_player()
@@ -86,7 +78,7 @@ mod:hook(HudElementTacticalOverlay, "_setup_achievements", function(f, self, ui_
                 blueprint = "achievement",
                 id = id,
             }
-            current_achievements[i] = id
+            current_achievements[#current_achievements + 1] = id
         end
     end
 

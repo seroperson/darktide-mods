@@ -1,0 +1,3 @@
+[tasks.build]
+description = "Zip each mod into output/ directory"
+run = "pwsh -NoProfile -File scripts/build.ps1"

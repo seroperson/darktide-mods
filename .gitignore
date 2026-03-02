@@ -4,3 +4,6 @@ Darktide-Mod-Framework/
 
 # Don't track my settings
 .vscode/
+
+# Don't track artifacts
+output/
